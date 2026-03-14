@@ -24,13 +24,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Set lowercase owner
-        run: echo "OWNER_LC=$(echo $OWNER | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: echo "OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -70,11 +68,11 @@ jobs:
 
       - name: Build API Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/openclaw-trading-api:${{ github.sha }} services/api
+          docker build -t ghcr.io/${OWNER_LC}/openclaw-trading-api:${{ github.sha }} services/api
 
       - name: Build UI Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/openclaw-trading-ui:${{ github.sha }} apps/ui
+          docker build -t ghcr.io/${OWNER_LC}/openclaw-trading-ui:${{ github.sha }} apps/ui
 
       - name: Login to GitHub Container Registry
         if: github.event_name == 'push'
@@ -87,12 +85,12 @@ jobs:
       - name: Push API image
         if: github.event_name == 'push'
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/openclaw-trading-api:${{ github.sha }}
+          docker push ghcr.io/${OWNER_LC}/openclaw-trading-api:${{ github.sha }}
 
       - name: Push UI image
         if: github.event_name == 'push'
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/openclaw-trading-ui:${{ github.sha }}
+          docker push ghcr.io/${OWNER_LC}/openclaw-trading-ui:${{ github.sha }}
 
       - name: Done
         run: echo "CI finished"
