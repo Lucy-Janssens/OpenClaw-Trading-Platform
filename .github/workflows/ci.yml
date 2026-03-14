@@ -5,6 +5,7 @@ on:
     branches: [ main, dev/openclaw-mvp ]
   pull_request:
     branches: [ main, dev/openclaw-mvp ]
+  workflow_dispatch: {}
 
 jobs:
   build:
