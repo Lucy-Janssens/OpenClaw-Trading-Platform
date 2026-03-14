@@ -15,3 +15,4 @@ This repo provides a minimal MVP scaffold with:
 ├── infrastructure/     # Docker Compose & Env configs
 └── ARCHITECTURE.md     # System Design
 ```
+<!-- CI trigger: changelog update to kick off pipeline -->
