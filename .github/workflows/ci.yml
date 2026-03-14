@@ -24,8 +24,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set lowercase owner
+        run: echo "OWNER_LC=$(echo $OWNER | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
