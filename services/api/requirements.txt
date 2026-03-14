@@ -9,3 +9,4 @@ asyncpg
 greenlet
 alembic
 pydantic-settings
+pytest-asyncio

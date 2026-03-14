@@ -17,6 +17,7 @@ class Trade(Base):
     side = Column(String) # "buy" or "sell"
     qty = Column(Float)
     price = Column(Float)
+    reasoning = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 class Ledger(Base):

@@ -69,7 +69,15 @@ async def get_trades(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Trade).order_by(Trade.timestamp.desc()).limit(20))
     trades = result.scalars().all()
     return {"trades": [
-        {"id": t.id, "pair": t.pair, "side": t.side, "qty": t.qty, "price": t.price} for t in trades
+        {
+            "id": t.id, 
+            "pair": t.pair, 
+            "side": t.side, 
+            "qty": t.qty, 
+            "price": t.price,
+            "reasoning": t.reasoning,
+            "timestamp": t.timestamp.isoformat() if t.timestamp else None
+        } for t in trades
     ]}
 
 # --- Guardrails ---

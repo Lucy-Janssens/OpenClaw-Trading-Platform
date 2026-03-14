@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     BINANCE_API_KEY: str = ""
     BINANCE_SECRET: str = ""
     TESTNET: bool = True
+    LLM_PROVIDER: str = "openai" # or "gemini", "anthropic"
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = "gpt-4o"
 
     class Config:
         env_file = ".env"

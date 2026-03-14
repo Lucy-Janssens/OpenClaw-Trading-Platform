@@ -47,6 +47,7 @@ jobs:
       - name: Run backend tests
         working-directory: services/api
         run: |
+          alembic upgrade head
           pytest -q || true
 
       - name: Set up Node

@@ -325,10 +325,11 @@
                                 <th>Amount</th>
                                 <th>Price</th>
                                 <th>Total</th>
+                                <th>Reasoning</th>
                             </tr>
                         </thead>
                         <tbody id="tradesBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -502,6 +503,7 @@
                             <td>${t.qty}</td>
                             <td>$${t.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td>$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="font-size: 0.75rem; color: var(--text-muted); max-width: 300px;">${t.reasoning || 'N/A'}</td>
                         </tr>
                     `;
                 }).join('');

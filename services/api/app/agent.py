@@ -8,6 +8,7 @@ from app.database import AsyncSessionLocal
 from app.models import Guardrails, Trade, Ledger
 from app.exchange import exchange_adapter
 from app.config import settings
+from app.brain import trading_brain
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +59,10 @@ class AgentRunner:
                 logger.warning(f"Trade quantity {self.trade_qty} exceeds max_position_size {guardrails.max_position_size}. Skipping.")
                 return
 
-            # 2. Fetch Market Price
+            # 2. Fetch Market Price & Balance
             ticker = await exchange_adapter.fetch_ticker(self.symbol)
+            balance = await exchange_adapter.fetch_balance()
+            
             if not ticker:
                 logger.warning(f"Could not fetch ticker for {self.symbol}")
                 return
@@ -67,11 +70,17 @@ class AgentRunner:
             current_price = ticker.get('last')
             logger.info(f"Current {self.symbol} price: {current_price}")
 
-            # 3. Simple Random Strategy (MVP mock)
-            side = random.choice(["buy", "sell"])
+            # 3. AI Brain Strategy
+            decision = await trading_brain.decide(ticker, balance, self.symbol)
+            side = decision.get("side", "hold").lower()
+            reasoning = decision.get("reasoning", "No reasoning provided.")
+
+            if side == "hold":
+                logger.info(f"Agent decided to HOLD. Reason: {reasoning}")
+                return
             
             # 4. Execute Trade (Real or Testnet via CCXT)
-            logger.info(f"Agent decided to {side} {self.trade_qty} {self.symbol}")
+            logger.info(f"Agent decided to {side} {self.trade_qty} {self.symbol}. Reason: {reasoning}")
             order = await exchange_adapter.create_market_order(self.symbol, side, self.trade_qty)
             
             if order:
@@ -81,13 +90,12 @@ class AgentRunner:
                     pair=self.symbol,
                     side=side,
                     qty=self.trade_qty,
-                    price=executed_price
+                    price=executed_price,
+                    reasoning=reasoning
                 )
                 session.add(new_trade)
                 
                 # 6. Simulate Profit Sweeping to Withdrawal Ledger
-                # In a real scenario, profit is calculated based on PnL of closed positions.
-                # Here we just randomly add 1% to the withdrawal ledger on half the ticks to simulate "profit" accumulating.
                 if random.random() > 0.5:
                     sweep_amount = (self.trade_qty * executed_price) * 0.01 
                     ledger = await session.execute(select(Ledger).where(Ledger.balance_type == "withdrawal"))
