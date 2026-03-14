@@ -3,3 +3,9 @@ uvicorn[standard]
 python-multipart==0.0.5
 pytest
 httpx
+ccxt
+sqlalchemy>=2.0.0
+asyncpg
+greenlet
+alembic
+pydantic-settings

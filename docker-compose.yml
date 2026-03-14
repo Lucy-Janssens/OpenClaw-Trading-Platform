@@ -22,7 +22,10 @@ services:
       context: ./services/api
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: "postgresql://appuser:securepass@db:5432/appdb"
+      DATABASE_URL: "postgresql+asyncpg://appuser:securepass@db:5432/appdb"
+      BINANCE_API_KEY: ${BINANCE_API_KEY:-}
+      BINANCE_SECRET: ${BINANCE_SECRET:-}
+      TESTNET: ${TESTNET:-True}
     depends_on:
       db:
         condition: service_healthy
