@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: openclaw-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: openclaw
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: openclaw
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ../services/api
+      dockerfile: Dockerfile
+    container_name: openclaw-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://openclaw:${DB_PASSWORD:-changeme}@db:5432/openclaw
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key}
+    depends_on:
+      - db
+
+  ui:
+    build:
+      context: ../apps/ui
+      dockerfile: Dockerfile
+    container_name: openclaw-ui
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
