@@ -1,1 +1,3 @@
-fastapi\nuvicorn[standard]\npython-multipart==0.0.5\n
+fastapi
+uvicorn[standard]
+python-multipart==0.0.5
