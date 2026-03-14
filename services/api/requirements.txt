@@ -1,3 +1,5 @@
 fastapi
 uvicorn[standard]
 python-multipart==0.0.5
+pytest
+httpx

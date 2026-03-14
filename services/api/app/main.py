@@ -1,31 +1,46 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
 app = FastAPI(
     title="OpenClaw Trading Platform API",
     description="Backend for autonomous AI trading agents",
-    version="0.1.0"
+    version="0.1.0",
 )
 
-# CORS configuration for UI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Tighten in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     return {"message": "OpenClaw Trading API is live"}
 
+
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "services": {"db": "up", "adapters": "running"}}
+    return {"status": "healthy"}
 
-# TODO: Add routers for /trading, /account, /guardrails, /admin
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/trades")
+async def trades():
+    return {
+        "trades": [
+            {"id": 1, "pair": "BTC-USD", "side": "buy", "qty": 0.5, "price": 48000.0},
+            {"id": 2, "pair": "ETH-USD", "side": "sell", "qty": 2.0, "price": 3500.0},
+        ]
+    }
+
+
+@app.get("/markets")
+async def markets():
+    return {
+        "markets": [
+            {"pair": "BTC-USD", "bid": 47980.0, "ask": 48020.0},
+            {"pair": "ETH-USD", "bid": 3490.0, "ask": 3510.0},
+        ]
+    }
