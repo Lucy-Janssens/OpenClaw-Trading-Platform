@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "openai" # or "gemini", "anthropic"
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "gpt-4o"
+    DISCORD_WEBHOOK_URL: str = ""
+    STRATEGY_PROFILE: str = "balanced"  # conservative | balanced | aggressive
 
     class Config:
         env_file = ".env"

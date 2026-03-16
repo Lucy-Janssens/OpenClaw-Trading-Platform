@@ -17,6 +17,7 @@ class Trade(Base):
     side = Column(String) # "buy" or "sell"
     qty = Column(Float)
     price = Column(Float)
+    pnl = Column(Float, nullable=True)  # realised PnL for this trade in USD
     reasoning = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -31,3 +32,16 @@ class Wallet(Base):
     id = Column(Integer, primary_key=True, index=True)
     address = Column(String, unique=True, index=True)
     whitelisted = Column(Boolean, default=True)
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String, index=True)  # e.g. "guardrails_updated", "agent_stopped"
+    detail = Column(String, nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+class StrategyProfile(Base):
+    __tablename__ = "strategy_profiles"
+    id = Column(Integer, primary_key=True, index=True)
+    profile = Column(String, default="balanced")  # conservative | balanced | aggressive
+    is_active = Column(Boolean, default=True)

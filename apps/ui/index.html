@@ -292,6 +292,16 @@
                     <button type="submit" class="primary">+</button>
                 </form>
             </div>
+
+            <div class="panel">
+                <h2>Strategy Profile</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Controls the AI's risk appetite.</p>
+                <select id="strategySelect" style="width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.75rem; border-radius: 8px; font-family: inherit; cursor: pointer;" onchange="setStrategy(this.value)">
+                    <option value="conservative">🛡️ Conservative</option>
+                    <option value="balanced" selected>⚖️ Balanced</option>
+                    <option value="aggressive">🚀 Aggressive</option>
+                </select>
+            </div>
         </aside>
 
         <main class="main-content">
@@ -315,6 +325,24 @@
             </div>
 
             <div class="panel" style="flex: 1;">
+                <h2>Performance (PnL)</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 0.25rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">24h</div>
+                        <div class="value-display" id="pnl24h" style="font-size: 1.25rem;">--</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">7 days</div>
+                        <div class="value-display" id="pnl7d" style="font-size: 1.25rem;">--</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">All time</div>
+                        <div class="value-display" id="pnlAll" style="font-size: 1.25rem;">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="flex: 1;">
                 <h2>Recent Trades</h2>
                 <div style="overflow-x: auto;">
                     <table>
@@ -325,11 +353,26 @@
                                 <th>Amount</th>
                                 <th>Price</th>
                                 <th>Total</th>
+                                <th>PnL</th>
                                 <th>Reasoning</th>
                             </tr>
                         </thead>
                         <tbody id="tradesBody">
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Activity Log</h2>
+                <div style="overflow-x: auto; max-height: 200px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr><th>Time</th><th>Event</th><th>Detail</th></tr>
+                        </thead>
+                        <tbody id="auditBody">
+                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -496,6 +539,9 @@
                 }
                 tbody.innerHTML = data.trades.map(t => {
                     const total = t.qty * t.price;
+                    const pnlStr = t.pnl != null
+                        ? `<span style="color:${t.pnl >= 0 ? 'var(--success)' : 'var(--danger)'}">${t.pnl >= 0 ? '+' : ''}$${Math.abs(t.pnl).toFixed(2)}</span>`
+                        : '<span style="color:var(--text-muted)">—</span>';
                     return `
                         <tr>
                             <td class="${t.side}" style="font-weight: 600; text-transform: uppercase;">${t.side}</td>
@@ -503,11 +549,59 @@
                             <td>${t.qty}</td>
                             <td>$${t.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td>$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>${pnlStr}</td>
                             <td style="font-size: 0.75rem; color: var(--text-muted); max-width: 300px;">${t.reasoning || 'N/A'}</td>
                         </tr>
                     `;
                 }).join('');
             } catch (e) {}
+        }
+
+        async function loadPnL() {
+            try {
+                const data = await fetchAPI('/pnl');
+                const fmt = (v) => {
+                    const str = `${v >= 0 ? '+' : ''}$${Math.abs(v).toFixed(2)}`;
+                    const color = v >= 0 ? 'var(--success)' : 'var(--danger)';
+                    return `<span style="color:${color}">${str}</span>`;
+                };
+                document.getElementById('pnl24h').innerHTML = fmt(data.daily_pnl);
+                document.getElementById('pnl7d').innerHTML = fmt(data.weekly_pnl);
+                document.getElementById('pnlAll').innerHTML = fmt(data.all_time_pnl);
+            } catch(e) {}
+        }
+
+        async function loadAuditLog() {
+            try {
+                const data = await fetchAPI('/audit-log');
+                const tbody = document.getElementById('auditBody');
+                if (!data.entries.length) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">No activity yet</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.entries.map(e => `
+                    <tr>
+                        <td style="white-space:nowrap;color:var(--text-muted);font-size:0.75rem">${new Date(e.timestamp).toLocaleString()}</td>
+                        <td style="font-size:0.8rem">${e.event_type.replace(/_/g, ' ')}</td>
+                        <td style="font-size:0.75rem;color:var(--text-muted)">${e.detail || ''}</td>
+                    </tr>
+                `).join('');
+            } catch(e) {}
+        }
+
+        async function loadStrategy() {
+            try {
+                const data = await fetchAPI('/strategy');
+                const sel = document.getElementById('strategySelect');
+                if (sel) sel.value = data.profile;
+            } catch(e) {}
+        }
+
+        async function setStrategy(profile) {
+            try {
+                await fetchAPI('/strategy', { method: 'POST', body: JSON.stringify({ profile }) });
+                showToast(`Strategy set to ${profile}`);
+            } catch(e) {}
         }
 
         // Init
@@ -517,6 +611,9 @@
         loadMarket();
         loadLedger();
         loadTrades();
+        loadPnL();
+        loadAuditLog();
+        loadStrategy();
 
         // Loops
         setInterval(pollHealth, 5000);
@@ -524,6 +621,8 @@
         setInterval(() => {
             loadLedger();
             loadTrades();
+            loadPnL();
+            loadAuditLog();
         }, 10000);
     </script>
 </body>
